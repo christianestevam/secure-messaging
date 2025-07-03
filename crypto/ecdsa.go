@@ -301,3 +301,11 @@ func VerifyDataWithUsername(data []byte, username string, signature []byte, publ
 	combined := append(data, []byte(username)...)
 	return VerifyECDSA(combined, signature, publicKey)
 }
+
+// ===== NOVAS FUNÇÕES ADICIONADAS =====
+
+// SHA256Hash calcula hash SHA256 (função utilitária para compatibilidade)
+func SHA256Hash(data []byte) []byte {
+	hash := sha256.Sum256(data)
+	return hash[:]
+}

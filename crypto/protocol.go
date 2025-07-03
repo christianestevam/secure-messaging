@@ -19,6 +19,7 @@ type HandshakeMessage struct {
 	PublicKey *big.Int `json:"public_key"`
 	Signature []byte   `json:"signature"`
 	Username  string   `json:"username"`
+	Salt      []byte   `json:"salt"`  // Adicionar salt ao handshake
 }
 
 // ProtocolSecureMessage representa uma mensagem segura completa com HMAC
@@ -240,8 +241,15 @@ func (ph *ProtocolHandler) CreateHandshakeMessage() (*HandshakeMessage, error) {
 	// Obter chave pública DH
 	publicKey := ph.dhExchange.GetPublicKey()
 	
-	// Criar dados para assinatura: publicKey + username
+	// Gerar salt para PBKDF2
+	salt, err := GenerateSalt(32)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao gerar salt: %v", err)
+	}
+	
+	// Criar dados para assinatura: publicKey + username + salt
 	signData := append(publicKey.Bytes(), []byte(ph.username)...)
+	signData = append(signData, salt...)
 	
 	// Assinar com ECDSA
 	signature, err := SignECDSA(signData, ph.ecdsaKeyPair.Private)
@@ -253,6 +261,7 @@ func (ph *ProtocolHandler) CreateHandshakeMessage() (*HandshakeMessage, error) {
 		PublicKey: publicKey,
 		Signature: signature,
 		Username:  ph.username,
+		Salt:      salt,
 	}, nil
 }
 
